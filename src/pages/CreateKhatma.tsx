@@ -18,7 +18,7 @@ type FormValues = z.infer<typeof schema>;
 
 const defaultSurahs = surahList.map((_, i) => i);
 
-type KhatmaHistoryItem = { id: string; title: string; status: string };
+type KhatmaHistoryItem = { id: string; title: string; status: string; admin: string };
 
 const CreateKhatma: React.FC = () => {
     const [lang, setLang] = useState<Lang>('ar');
@@ -47,7 +47,7 @@ const CreateKhatma: React.FC = () => {
     useEffect(() => {
         const stored = localStorage.getItem('khatmaHistory');
         if (stored) {
-            const arr: { id: string; title: string }[] = JSON.parse(stored);
+            const arr: { id: string; title: string; admin: string }[] = JSON.parse(stored);
             if (arr.length) {
                 Promise.all(
                     arr.map(async (item) => {
@@ -84,16 +84,17 @@ const CreateKhatma: React.FC = () => {
                 status: 'pending',
             });
             const baseLink = window.location.origin + '/khatma/' + docRef.id;
+            const adminLink = baseLink + '?admin=1';
             setToast({
                 message: t.createdSuccess,
                 type: 'success',
                 link: baseLink,
             });
-            setCreatedLinks({ user: baseLink, admin: baseLink + '?admin=1' });
+            setCreatedLinks({ user: baseLink, admin: adminLink });
             // Save to localStorage
-            const newItem = { id: docRef.id, title: data.title };
+            const newItem = { id: docRef.id, title: data.title, admin: adminLink };
             const prev = localStorage.getItem('khatmaHistory');
-            let arr: { id: string; title: string }[] = prev ? JSON.parse(prev) : [];
+            let arr: { id: string; title: string; admin: string }[] = prev ? JSON.parse(prev) : [];
             arr = [newItem, ...arr.filter(i => i.id !== newItem.id)];
             localStorage.setItem('khatmaHistory', JSON.stringify(arr));
             // Update state
@@ -173,14 +174,26 @@ const CreateKhatma: React.FC = () => {
                 </button>
             </div>
             <h1 className="text-2xl font-bold text-center mb-6">{t.title}</h1>
-            {khatmaHistory.length > 0 && (
+            {khatmaHistory.filter(k => k.status === 'ended').length > 0 && (
                 <div className="mb-8">
                     <div className="font-bold mb-2">Your Khatma History:</div>
                     <div className="space-y-1">
-                        {khatmaHistory.map(k => (
-                            <div key={k.id} className="flex items-center gap-2 text-sm">
-                                <a href={`/khatma/${k.id}`} className="underline text-blue-700 break-all" target="_blank" rel="noopener noreferrer">{k.title}</a>
-                                <span className="px-2 py-0.5 rounded text-xs bg-gray-200 ml-2">{k.status}</span>
+                        {khatmaHistory.filter(k => k.status === 'ended').map(k => (
+                            <div key={k.id} className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
+                                <div>
+                                    <span className="font-semibold">{k.title}</span>
+                                    <span className="px-2 py-0.5 rounded text-xs bg-gray-200 ml-2">{k.status}</span>
+                                </div>
+                                <div className="flex gap-2">
+                                    <a href={`/khatma/${k.id}`} target="_blank" rel="noopener noreferrer"
+                                        className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 transition">
+                                        Open User Page
+                                    </a>
+                                    <a href={k.admin} target="_blank" rel="noopener noreferrer"
+                                        className="px-3 py-1 rounded bg-green-600 text-white hover:bg-green-700 transition">
+                                        Open Admin Page
+                                    </a>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -191,9 +204,21 @@ const CreateKhatma: React.FC = () => {
                     <div className="font-bold mb-2">Active Khatmas:</div>
                     <div className="space-y-1">
                         {activeKhatmas.map(k => (
-                            <div key={k.id} className="flex items-center gap-2 text-sm">
-                                <a href={`/khatma/${k.id}`} className="underline text-green-700 break-all" target="_blank" rel="noopener noreferrer">{k.title}</a>
-                                <span className="px-2 py-0.5 rounded text-xs bg-green-100 ml-2">{k.status}</span>
+                            <div key={k.id} className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
+                                <div>
+                                    <span className="font-semibold">{k.title}</span>
+                                    <span className="px-2 py-0.5 rounded text-xs bg-green-100 ml-2">{k.status}</span>
+                                </div>
+                                <div className="flex gap-2">
+                                    <a href={`/khatma/${k.id}`} target="_blank" rel="noopener noreferrer"
+                                        className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 transition">
+                                        Open User Page
+                                    </a>
+                                    <a href={k.admin} target="_blank" rel="noopener noreferrer"
+                                        className="px-3 py-1 rounded bg-green-600 text-white hover:bg-green-700 transition">
+                                        Open Admin Page
+                                    </a>
+                                </div>
                             </div>
                         ))}
                     </div>
