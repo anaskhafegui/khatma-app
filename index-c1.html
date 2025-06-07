@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create Khatma</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary-color: #2ecc71;
+        --primary-hover: #27ae60;
+        --bg-color: #f8f9fa;
+        --card-bg: #ffffff;
+        --text-color: #2c3e50;
+        --border-color: #e9ecef;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        line-height: 1.6;
+        padding: 20px;
+        min-height: 100vh;
+      }
+
+      body[dir="rtl"] {
+        font-family: "Cairo", sans-serif;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 40px auto;
+        background: var(--card-bg);
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 30px;
+        color: var(--text-color);
+        font-size: 2rem;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+      }
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: var(--primary-color);
+      }
+
+      .surah-list {
+        max-height: 400px;
+        overflow-y: auto;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        padding: 10px;
+        background: var(--card-bg);
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+      }
+
+      .surah-item {
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        border-radius: 4px;
+        transition: background-color 0.2s ease;
+        background: var(--bg-color);
+      }
+
+      .surah-item:hover {
+        background-color: var(--border-color);
+      }
+
+      .surah-item input[type="checkbox"] {
+        margin-right: 10px;
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+
+      .surah-item label {
+        flex: 1;
+        margin: 0;
+        cursor: pointer;
+        font-weight: normal;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 14px;
+      }
+
+      .select-all {
+        margin-bottom: 10px;
+        padding: 8px;
+        background: var(--bg-color);
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        grid-column: 1 / -1;
+      }
+
+      .select-all input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+
+      .select-all label {
+        margin: 0;
+        cursor: pointer;
+      }
+
+      button {
+        width: 100%;
+        padding: 14px;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      button:hover {
+        background-color: var(--primary-hover);
+      }
+
+      button:disabled {
+        background-color: #95a5a6;
+        cursor: not-allowed;
+      }
+
+      .loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+
+      .loading.active {
+        display: flex;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid var(--border-color);
+        border-top-color: var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--text-color);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        display: none;
+        z-index: 1000;
+      }
+
+      .toast.show {
+        display: block;
+        animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes fadeOut {
+        from {
+          opacity: 1;
+        }
+        to {
+          opacity: 0;
+        }
+      }
+
+      .language-switcher {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        gap: 10px;
+      }
+
+      .language-btn {
+        width: auto;
+        padding: 8px 16px;
+        font-size: 14px;
+        background-color: var(--text-color);
+      }
+
+      .language-btn.active {
+        background-color: var(--primary-color);
+      }
+
+      @media (max-width: 768px) {
+        .surah-list {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      @media (max-width: 480px) {
+        .surah-list {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .surah-item {
+          padding: 6px;
+        }
+
+        .surah-item input[type="checkbox"] {
+          width: 16px;
+          height: 16px;
+          margin-right: 6px;
+        }
+
+        .surah-item label {
+          font-size: 13px;
+        }
+      }
+
+      @media (max-width: 320px) {
+        .surah-list {
+          grid-template-columns: repeat(1, 1fr);
+        }
+      }
+    </style>
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+      import {
+        getFirestore,
+        collection,
+        addDoc,
+        serverTimestamp,
+      } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyARPY9aRtzDPHlQXUmLBUVtpeYoE3-ssV4",
+        authDomain: "khatma-data.firebaseapp.com",
+        projectId: "khatma-data",
+        storageBucket: "khatma-data.firebasestorage.app",
+        messagingSenderId: "697176212018",
+        appId: "1:697176212018:web:ef0573d05eedda2e2e722b",
+      };
+
+      // Initialize Firebase with error handling
+      let app;
+      let db;
+      try {
+        app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+      } catch (error) {
+        console.error("Firebase initialization error:", error);
+        showToast(
+          "Failed to initialize Firebase. Please check your connection.",
+          true
+        );
+      }
+
+      const translations = {
+        en: {
+          title: "Create New Khatma",
+          titlePlaceholder: "Enter Khatma title (e.g. Ramadan Khatma)",
+          selectSurahs: "Select Surahs (all are selected by default):",
+          createButton: "Create Khatma",
+          enterTitle: "Please enter a title for the Khatma",
+          selectOneSurah: "Please select at least one surah",
+          createdSuccess: "Khatma created successfully! Share this link: ",
+          createError: "Failed to create Khatma. Please try again.",
+          selectAll: "Select All Surahs",
+        },
+        ar: {
+          title: "إنشاء ختمة جديدة",
+          titlePlaceholder: "أدخل عنوان الختمة (مثال: ختمة رمضان)",
+          selectSurahs: "اختر السور (جميع السور مختارة افتراضياً):",
+          createButton: "إنشاء الختمة",
+          enterTitle: "الرجاء إدخال عنوان للختمة",
+          selectOneSurah: "الرجاء اختيار سورة واحدة على الأقل",
+          createdSuccess: "تم إنشاء الختمة بنجاح! شارك هذا الرابط: ",
+          createError: "فشل في إنشاء الختمة. الرجاء المحاولة مرة أخرى.",
+          selectAll: "اختيار جميع السور",
+        },
+      };
+
+      const fullSurahList = [
+        { name: "الفاتحة", nameEn: "Al-Fatiha" },
+        { name: "البقرة", nameEn: "Al-Baqara" },
+        { name: "آل عمران", nameEn: "Al-Imran" },
+        { name: "النساء", nameEn: "An-Nisa" },
+        { name: "المائدة", nameEn: "Al-Ma'idah" },
+        { name: "الأنعام", nameEn: "Al-An'am" },
+        { name: "الأعراف", nameEn: "Al-A'raf" },
+        { name: "الأنفال", nameEn: "Al-Anfal" },
+        { name: "التوبة", nameEn: "At-Tawbah" },
+        { name: "يونس", nameEn: "Yunus" },
+        { name: "هود", nameEn: "Hud" },
+        { name: "يوسف", nameEn: "Yusuf" },
+        { name: "الرعد", nameEn: "Ar-Ra'd" },
+        { name: "إبراهيم", nameEn: "Ibrahim" },
+        { name: "الحجر", nameEn: "Al-Hijr" },
+        { name: "النحل", nameEn: "An-Nahl" },
+        { name: "الإسراء", nameEn: "Al-Isra" },
+        { name: "الكهف", nameEn: "Al-Kahf" },
+        { name: "مريم", nameEn: "Maryam" },
+        { name: "طه", nameEn: "Ta-Ha" },
+        { name: "الأنبياء", nameEn: "Al-Anbiya" },
+        { name: "الحج", nameEn: "Al-Hajj" },
+        { name: "المؤمنون", nameEn: "Al-Mu'minun" },
+        { name: "النور", nameEn: "An-Nur" },
+        { name: "الفرقان", nameEn: "Al-Furqan" },
+        { name: "الشعراء", nameEn: "Ash-Shu'ara" },
+        { name: "النمل", nameEn: "An-Naml" },
+        { name: "القصص", nameEn: "Al-Qasas" },
+        { name: "العنكبوت", nameEn: "Al-Ankabut" },
+        { name: "الروم", nameEn: "Ar-Rum" },
+        { name: "لقمان", nameEn: "Luqman" },
+        { name: "السجدة", nameEn: "As-Sajda" },
+        { name: "الأحزاب", nameEn: "Al-Ahzab" },
+        { name: "سبأ", nameEn: "Saba" },
+        { name: "فاطر", nameEn: "Fatir" },
+        { name: "يس", nameEn: "Ya-Sin" },
+        { name: "الصافات", nameEn: "As-Saffat" },
+        { name: "ص", nameEn: "Sad" },
+        { name: "الزمر", nameEn: "Az-Zumar" },
+        { name: "غافر", nameEn: "Ghafir" },
+        { name: "فصلت", nameEn: "Fussilat" },
+        { name: "الشورى", nameEn: "Ash-Shura" },
+        { name: "الزخرف", nameEn: "Az-Zukhruf" },
+        { name: "الدخان", nameEn: "Ad-Dukhan" },
+        { name: "الجاثية", nameEn: "Al-Jathiyah" },
+        { name: "الأحقاف", nameEn: "Al-Ahqaf" },
+        { name: "محمد", nameEn: "Muhammad" },
+        { name: "الفتح", nameEn: "Al-Fath" },
+        { name: "الحجرات", nameEn: "Al-Hujurat" },
+        { name: "ق", nameEn: "Qaf" },
+        { name: "الذاريات", nameEn: "Adh-Dhariyat" },
+        { name: "الطور", nameEn: "At-Tur" },
+        { name: "النجم", nameEn: "An-Najm" },
+        { name: "القمر", nameEn: "Al-Qamar" },
+        { name: "الرحمن", nameEn: "Ar-Rahman" },
+        { name: "الواقعة", nameEn: "Al-Waqi'ah" },
+        { name: "الحديد", nameEn: "Al-Hadid" },
+        { name: "المجادلة", nameEn: "Al-Mujadila" },
+        { name: "الحشر", nameEn: "Al-Hashr" },
+        { name: "الممتحنة", nameEn: "Al-Mumtahina" },
+        { name: "الصف", nameEn: "As-Saff" },
+        { name: "الجمعة", nameEn: "Al-Jumu'a" },
+        { name: "المنافقون", nameEn: "Al-Munafiqun" },
+        { name: "التغابن", nameEn: "At-Taghabun" },
+        { name: "الطلاق", nameEn: "At-Talaq" },
+        { name: "التحريم", nameEn: "At-Tahrim" },
+        { name: "الملك", nameEn: "Al-Mulk" },
+        { name: "القلم", nameEn: "Al-Qalam" },
+        { name: "الحاقة", nameEn: "Al-Haqqah" },
+        { name: "المعارج", nameEn: "Al-Ma'arij" },
+        { name: "نوح", nameEn: "Nuh" },
+        { name: "الجن", nameEn: "Al-Jinn" },
+        { name: "المزمل", nameEn: "Al-Muzzammil" },
+        { name: "المدثر", nameEn: "Al-Muddaththir" },
+        { name: "القيامة", nameEn: "Al-Qiyamah" },
+        { name: "الإنسان", nameEn: "Al-Insan" },
+        { name: "المرسلات", nameEn: "Al-Mursalat" },
+        { name: "النبأ", nameEn: "An-Naba" },
+        { name: "النازعات", nameEn: "An-Nazi'at" },
+        { name: "عبس", nameEn: "Abasa" },
+        { name: "التكوير", nameEn: "At-Takwir" },
+        { name: "الانفطار", nameEn: "Al-Infitar" },
+        { name: "المطففين", nameEn: "Al-Mutaffifin" },
+        { name: "الانشقاق", nameEn: "Al-Inshiqaq" },
+        { name: "البروج", nameEn: "Al-Buruj" },
+        { name: "الطارق", nameEn: "At-Tariq" },
+        { name: "الأعلى", nameEn: "Al-A'la" },
+        { name: "الغاشية", nameEn: "Al-Ghashiyah" },
+        { name: "الفجر", nameEn: "Al-Fajr" },
+        { name: "البلد", nameEn: "Al-Balad" },
+        { name: "الشمس", nameEn: "Ash-Shams" },
+        { name: "الليل", nameEn: "Al-Lail" },
+        { name: "الضحى", nameEn: "Ad-Duhaa" },
+        { name: "الشرح", nameEn: "Ash-Sharh" },
+        { name: "التين", nameEn: "At-Tin" },
+        { name: "العلق", nameEn: "Al-'Alaq" },
+        { name: "القدر", nameEn: "Al-Qadr" },
+        { name: "البينة", nameEn: "Al-Bayyina" },
+        { name: "الزلزلة", nameEn: "Az-Zalzalah" },
+        { name: "العاديات", nameEn: "Al-Adiyat" },
+        { name: "القارعة", nameEn: "Al-Qari'ah" },
+        { name: "التكاثر", nameEn: "At-Takathur" },
+        { name: "العصر", nameEn: "Al-Asr" },
+        { name: "الهمزة", nameEn: "Al-Humazah" },
+        { name: "الفيل", nameEn: "Al-Fil" },
+        { name: "قريش", nameEn: "Quraysh" },
+        { name: "الماعون", nameEn: "Al-Ma'un" },
+        { name: "الكوثر", nameEn: "Al-Kawthar" },
+        { name: "الكافرون", nameEn: "Al-Kafirun" },
+        { name: "النصر", nameEn: "An-Nasr" },
+        { name: "المسد", nameEn: "Al-Masad" },
+        { name: "الإخلاص", nameEn: "Al-Ikhlas" },
+        { name: "الفلق", nameEn: "Al-Falaq" },
+        { name: "الناس", nameEn: "An-Nas" },
+      ];
+
+      const loadingEl = document.querySelector(".loading");
+      const toastEl = document.getElementById("toast");
+      const createButton = document.getElementById("createButton");
+      let currentLang = localStorage.getItem("language") || "ar";
+
+      function setLanguage(lang) {
+        currentLang = lang;
+        localStorage.setItem("language", lang);
+        document.documentElement.lang = lang;
+        document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+        updateTranslations();
+      }
+
+      function updateTranslations() {
+        const t = translations[currentLang];
+        document.querySelector("h1").textContent = t.title;
+        document.getElementById("khatmaTitle").placeholder = t.titlePlaceholder;
+        document.querySelector("label").textContent = t.selectSurahs;
+        document.getElementById("createButton").textContent = t.createButton;
+        document.querySelector(".select-all label").textContent = t.selectAll;
+
+        // Update surah names
+        fullSurahList.forEach((surah, index) => {
+          const label = document.querySelector(`label[for="surah-${index}"]`);
+          if (label) {
+            label.textContent =
+              currentLang === "ar" ? surah.name : surah.nameEn;
+          }
+        });
+      }
+
+      function showLoading() {
+        loadingEl.classList.add("active");
+        createButton.disabled = true;
+      }
+
+      function hideLoading() {
+        loadingEl.classList.remove("active");
+        createButton.disabled = false;
+      }
+
+      function showToast(message, isError = false) {
+        toastEl.textContent = message;
+        toastEl.style.backgroundColor = isError ? "#e74c3c" : "#2c3e50";
+        toastEl.classList.add("show");
+        setTimeout(() => {
+          toastEl.classList.remove("show");
+        }, 3000);
+      }
+
+      window.onload = () => {
+        const surahList = document.getElementById("surahList");
+
+        // Add select all checkbox
+        const selectAllDiv = document.createElement("div");
+        selectAllDiv.className = "select-all";
+        selectAllDiv.innerHTML = `
+          <input type="checkbox" id="selectAll" checked>
+          <label for="selectAll">${translations[currentLang].selectAll}</label>
+        `;
+        surahList.parentNode.insertBefore(selectAllDiv, surahList);
+
+        // Add surah checkboxes
+        fullSurahList.forEach((s, index) => {
+          const item = document.createElement("div");
+          item.className = "surah-item";
+          item.innerHTML = `
+            <input type="checkbox" id="surah-${index}" checked>
+            <label for="surah-${index}">${
+            currentLang === "ar" ? s.name : s.nameEn
+          }</label>
+          `;
+          surahList.appendChild(item);
+        });
+
+        // Handle select all functionality
+        const selectAllCheckbox = document.getElementById("selectAll");
+        selectAllCheckbox.addEventListener("change", (e) => {
+          const checkboxes = document.querySelectorAll(
+            "#surahList input[type='checkbox']"
+          );
+          checkboxes.forEach(
+            (checkbox) => (checkbox.checked = e.target.checked)
+          );
+        });
+
+        // Add language switcher
+        const switcher = document.createElement("div");
+        switcher.className = "language-switcher";
+        switcher.innerHTML = `
+          <button class="language-btn ${
+            currentLang === "en" ? "active" : ""
+          }" onclick="setLanguage('en')">English</button>
+          <button class="language-btn ${
+            currentLang === "ar" ? "active" : ""
+          }" onclick="setLanguage('ar')">العربية</button>
+        `;
+        document.body.insertBefore(switcher, document.body.firstChild);
+
+        // Set initial language
+        setLanguage(currentLang);
+      };
+
+      window.setLanguage = setLanguage;
+
+      window.createKhatma = async () => {
+        if (!db) {
+          showToast("Database not initialized. Please refresh the page.", true);
+          return;
+        }
+
+        try {
+          const title = document.getElementById("khatmaTitle").value.trim();
+          const selected = Array.from(
+            document.querySelectorAll(
+              "#surahList input[type='checkbox']:checked"
+            )
+          );
+
+          if (!title) {
+            showToast(translations[currentLang].enterTitle, true);
+            return;
+          }
+
+          if (selected.length === 0) {
+            showToast(translations[currentLang].selectOneSurah, true);
+            return;
+          }
+
+          showLoading();
+
+          const surahs = selected.map((checkbox) => {
+            const index = parseInt(checkbox.id.split("-")[1]);
+            return {
+              id: index + 1,
+              name:
+                currentLang === "ar"
+                  ? fullSurahList[index].name
+                  : fullSurahList[index].nameEn,
+              nameEn: fullSurahList[index].nameEn,
+              assignedTo: null,
+              readCount: 0,
+            };
+          });
+
+          try {
+            const docRef = await addDoc(collection(db, "khatmas"), {
+              title,
+              createdAt: serverTimestamp(),
+              isLocked: false,
+              surahs,
+            });
+
+            const link = `${window.location.origin}/khatma.html?id=${docRef.id}`;
+            showToast(translations[currentLang].createdSuccess + link);
+
+            // Clear form
+            document.getElementById("khatmaTitle").value = "";
+            document.getElementById("selectAll").checked = true;
+            document
+              .querySelectorAll("#surahList input[type='checkbox']")
+              .forEach((checkbox) => (checkbox.checked = true));
+          } catch (firebaseError) {
+            console.error("Firebase operation error:", firebaseError);
+            showToast(
+              "Failed to create Khatma. Please check your internet connection and try again.",
+              true
+            );
+          }
+        } catch (error) {
+          console.error("Error creating Khatma:", error);
+          showToast(translations[currentLang].createError, true);
+        } finally {
+          hideLoading();
+        }
+      };
+
+      // Add error handling for Firebase initialization
+      window.addEventListener("error", (event) => {
+        console.error("Global error:", event.error);
+        hideLoading();
+        showToast(
+          "An unexpected error occurred. Please refresh the page.",
+          true
+        );
+      });
+
+      // Add unhandled promise rejection handler
+      window.addEventListener("unhandledrejection", (event) => {
+        console.error("Unhandled promise rejection:", event.reason);
+        hideLoading();
+        showToast(
+          "An unexpected error occurred. Please refresh the page.",
+          true
+        );
+      });
+    </script>
+  </head>
+  <body>
+    <div class="loading">
+      <div class="spinner"></div>
+    </div>
+    <div class="toast" id="toast"></div>
+    <div class="container">
+      <h1>Create New Khatma</h1>
+      <div class="form-group">
+        <input
+          type="text"
+          id="khatmaTitle"
+          placeholder="Enter Khatma title (e.g. Ramadan Khatma)"
+        />
+      </div>
+      <div class="form-group">
+        <label>Select Surahs (all are selected by default):</label>
+        <div class="surah-list" id="surahList"></div>
+      </div>
+      <button onclick="createKhatma()" id="createButton">Create Khatma</button>
+    </div>
+  </body>
+</html>
+
